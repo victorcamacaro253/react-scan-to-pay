@@ -1,4 +1,5 @@
 import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Modal = ({ isOpen, onClose, qrCode, paymentUrl, paymentMethod, handlePayment }) => {
   if (!isOpen) return null;

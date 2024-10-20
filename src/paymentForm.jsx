@@ -1,127 +1,109 @@
-import React,{useState} from 'react'
+import React,{useState,useEffect} from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCcStripe, faPaypal } from '@fortawesome/free-brands-svg-icons';
 import Modal from './modal';
+import CartModal from './CartModal'
 import ProductCard from './components/ProductCard';
+import { faShoppingCart } from '@fortawesome/free-solid-svg-icons'; // Asegúrate de importar desde el paquete correcto
 
 
 const  PaymentForm= ()=>{
-    const [items] = useState([
+/*const [items] = useState([
         { product_id: 1, name: 'Telefono', description: 'Descripción A', amount: 5230, quantity: 1 ,image:'../src/img/iphone.jpg'},
         { product_id: 2, name: 'Producto B', description: 'Descripción B', amount: 3000, quantity: 2, image:'../src/img/dell-laptop.jpg' },
 
     ])
-    
-    const [isOpen, setIsOpen] = useState(false);
-    const [qrCode,setQrCode] = useState(null)
-    const [paymentUrl,setPaymentUrl] = useState(null)
-    const [paymentMethod, setPaymentMethod] = useState('');
+*/
+    const [items,setItems] = useState([])
+    const [cart,setCart]= useState([])
+     const [isOpen, setIsOpen] = useState(false);
+    const [isCartModalOpen, setIsCartModalOpen] = useState(false); // Estado para el modal del carrito
 
-   
+
+
+   useEffect(()=>{
+   const fetchProdcuts= async ()=>{
+    try{
+  
+      const response = await fetch('http://localhost:5000/products')
+      const data = await response.json();
+      setItems(data);
+      console.log(data)
+
+    }catch(error){
+      console.error(error);
+
+
+    }
+   }
+
+   fetchProdcuts()
+
+
+   },[])
  /* const handleOpenModal = (method) => {
     setIsOpen(true);
     setPaymentMethod(method);
   };*/
 
-  const handleCloseModal = () => {
-    setIsOpen(false);
-  };
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+        const existingProduct = prevCart.find(item => item.product_id === product.product_id);
 
-   /*
-    const handlePaymentStripe = async ()=>{
-    try {
-
-        const response = await fetch('http://localhost:5000/payments',{
-            method:'POST',
-            headers:{'Content-Type': 'application/json'},
-            body:JSON.stringify({items,user_id:1})
-        });
-        
-        const data=  await response.json();
-
-        if (data.url) {
-            setPaymentUrl(data.url);
-            setQrCode(data.qrCode);        } else {
-            console.error('Error al crear la sesión de pago:', data);
+        if (existingProduct) {
+            // Si el producto ya existe, actualizar la cantidad
+            return prevCart.map(item => 
+                item.product_id === product.product_id 
+                ? { ...item,
+                   quantity: item.quantity + product.quantity,
+                } // Crear un nuevo objeto
+                : item
+            );
+        } else {
+            // Si no existe, agregar el nuevo producto
+            return [...prevCart, { ...product, amount: (product.amount * product.quantity) }];
         }
+    });
+};
 
-    } catch (error) {
-        console.error('Error al procesar el pago:', error);
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + (item.amount * item.quantity), 0) / 100; // Dividir por 100 para obtener el valor en USD
+};
 
-    }
-   } 
+const handleOpenCartModal = () => {
+  setIsCartModalOpen(true);
+};
 
+const handleCloseCartModal = () => {
+  setIsCartModalOpen(false);
+};
 
-   const handlePaymentPaypal = async ()=>{
-    try {
-
-        const response = await fetch('http://localhost:5000/payments/paypal',{
-            method:'POST',
-            headers:{'Content-Type': 'application/json'},
-            body:JSON.stringify({items,user_id:1})
-        });
-        
-        const data=  await response.json();
-
-        if (data.approvalUrl) {
-            setPaymentUrl(data.approvalUrl);
-            setQrCode(data.qrCode);    
-            } else {
-            console.error('Error al crear la sesión de pago:', data);
-        }
-
-    } catch (error) {
-        console.error('Error al procesar el pago:', error);
-
-    }
-   } */
-
-   const handleOpenModal = (method) => {
-    setIsOpen(true);
-    setPaymentMethod(method);
-    generateQrCode(method); // Llamar a la función generateQrCode aquí
-  };
-  
-  const generateQrCode = async (method) => {
-    try {
-      let response;
-      if (method === 'stripe') {
-        response = await fetch('http://localhost:5000/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items, user_id: 1 }),
-        });
-      } else if (method === 'paypal') {
-        response = await fetch('http://localhost:5000/payments/paypal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items, user_id: 1 }),
-        });
-      }
-  
-      const data = await response.json();
-     console.log(data)
-      if (data.qrCode) {
-        setQrCode(data.qrCode);
-        setPaymentUrl(data.url || data.approvalUrl);
-      } else {
-        console.error('Error al crear la sesión de pago:', data);
-      }
-    } catch (error) {
-      console.error('Error al procesar el pago:', error);
-    }
-  };
 
 
    return (
    
     <div>
         <div className="container">
-      <h1 className="my-4">Simulacion de Pagos</h1>
+      <h1 className="my-4">Nuestros Productos</h1>
+
+
+    
+        {/* Ícono del carrito */}
+        <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 1000 }}>
+          <FontAwesomeIcon icon={faShoppingCart} size="2x" onClick={handleOpenCartModal} />
+          {cart.length > 0 && (
+            <span style={{ position: 'absolute', top: 0, right: 0, background: 'blue', color: 'white', borderRadius: '50%', padding: '5px 10px' }}>
+              {cart.length}
+            </span>
+          )}
+        </div>
+
+
+
       <div className="row">
         {items.map((item) => (
-          <div className="col-sm-6" key={item.product_id}>
-            <ProductCard product={item} />
+          <div className="col-sm-6" key={item.id}>
+            <ProductCard product={item} addToCart={addToCart} />
           </div>
         ))}
       </div>
@@ -129,30 +111,16 @@ const  PaymentForm= ()=>{
 
 
 
-        <button className='btn btn-outline-primary' onClick={() => handleOpenModal('stripe')}>
-        <FontAwesomeIcon icon={faCcStripe} />
-        Pagar con Stripe
-      </button>
-      <button className='btn btn-outline-primary' onClick={() => handleOpenModal('paypal')}>
-        <FontAwesomeIcon icon={faPaypal} />
-        Pagar con PayPal
-      </button>
-
-      <Modal
-        isOpen={isOpen}
-        onClose={handleCloseModal}
-        qrCode={qrCode}
-        paymentUrl={paymentUrl}
-        paymentMethod={paymentMethod}
-        handlePayment={paymentMethod}
+   
+           {/* Modal del carrito */}
+           <CartModal
+        isOpen={isCartModalOpen}
+        onClose={handleCloseCartModal}
+        cart={cart}
+        calculateTotal={calculateTotal}
       />
-    
-    
-
 
     
-       
-
 
 
     </div>
