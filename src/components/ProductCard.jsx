@@ -1,11 +1,16 @@
 import React,{useState} from 'react';
 
-const ProductCard = ({ product, addToCart }) => {
+const ProductCard = ({ product, addToCart,removeFromCart   }) => {
   const [quantity, setQuantity] = useState(1); // Valor inicial de la cantidad
 
   const handleAddToCart = () => {
     // Llama a addToCart con el producto y la cantidad seleccionada
     addToCart({ ...product, quantity });
+  };
+
+  const handleRemoveFromCart = () => {
+    // Llama a removeFromCart con el producto
+    removeFromCart(product.id); // Se asume que el producto tiene un `id`
   };
 
 
@@ -14,12 +19,12 @@ const ProductCard = ({ product, addToCart }) => {
   }
 
   return (
-    <div className="card" style={{ width: '18rem' }}>
+    <div className="card" >
       <img
         src={`../src/img/${product.imagen}`} 
         className="card-img-top img-fluid"
         alt={product.name}
-        style={{ maxHeight: '350px', objectFit: 'cover' }}
+        style={{ maxHeight: '250px', objectFit: 'cover' }}
       />
       <div className="card-body">
         <h5 className="card-title">{product.name}</h5>
@@ -38,10 +43,20 @@ const ProductCard = ({ product, addToCart }) => {
 
         </div>
 
-
-        <button className="btn btn-primary" onClick={handleAddToCart}>
+       <div  style={{ marginTop: '10px' }}>
+        <button className="btn btn-primary" onClick={handleAddToCart} style={{ marginLeft: '10px' }}
+>
           Agregar al Carrito
         </button>
+        <button
+            className="btn btn-danger"
+            onClick={() => removeFromCart(product.product_id) }
+  
+            style={{ marginLeft: '10px' }}
+          >
+            Quitar del Carrito
+          </button>
+          </div>
       </div>
     </div>
   );
